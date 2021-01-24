@@ -7,27 +7,9 @@ import {
 import {DatabaseMock} from '../util';
 import {NameApiService} from '../nameApiService';
 
-jest.mock('../util', () => {
-  return {
-    DatabaseMock: jest.fn().mockImplementation(() => {
-      return {
-        save: (data: number[]) => {},
-      };
-    }),
-  };
-});
-
-jest.mock('../NameApiService', () => {
-  return {
-    NameApiService: jest.fn().mockImplementation(() => {
-      return {
-        getFirstName: () => {
-          return 'Takuro';
-        },
-      };
-    }),
-  };
-});
+jest.mock('axios');
+jest.mock('../util');
+jest.mock('../nameApiService');
 
 describe('sumOfArray', () => {
   test('should success', () => {
@@ -51,14 +33,43 @@ describe('asyncSumOfArray', () => {
   });
 });
 
+let databaseMock: jest.MockedClass<typeof DatabaseMock>;
 describe('asyncSumOfArraySometimesZero', () => {
+  beforeAll(() => {
+    databaseMock = DatabaseMock as jest.MockedClass<typeof DatabaseMock>;
+  });
+
   test('should success', async () => {
+    databaseMock.mockImplementation(() => {
+      return {
+        save: jest.fn((data: number[]) => {}),
+      };
+    });
     const value = await asyncSumOfArraySometimesZero([1, 3, 5]);
     expect(value).toBe(9);
+  });
+
+  test('should fail', async () => {
+    const databaseMock = DatabaseMock as jest.MockedClass<typeof DatabaseMock>;
+    databaseMock.mockImplementation(() => {
+      return {
+        save: jest.fn((data: number[]) => {
+          throw new Error('error');
+        }),
+      };
+    });
+    const value = await asyncSumOfArraySometimesZero([1, 3, 5]);
+    expect(value).toBe(0);
   });
 });
 
 describe('getFirstNameThrowIfLong', () => {
+  beforeAll(() => {
+    const nameApiServiceMock = jest
+      .spyOn(NameApiService.prototype, 'getFirstName')
+      .mockResolvedValue('Takuro');
+  });
+
   test('should success', async () => {
     const value = await getFirstNameThrowIfLong(100);
     expect(value).toMatch('Takuro');
