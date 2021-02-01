@@ -16,6 +16,10 @@ describe('sumOfArray', () => {
     expect(sumOfArray([1, 3, 5])).toBe(9);
   });
 
+  test('should success by empty array', () => {
+    expect(sumOfArray([])).toBe(0);
+  });
+
   test('should fail', () => {
     expect(sumOfArray([2, 4, 6])).not.toBe(11);
   });
